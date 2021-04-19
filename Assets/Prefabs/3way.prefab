@@ -122,5 +122,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9174b948904632945b76e836124c36e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  value: 01000000010000000100000000000000
+  connectorValues: 01000000010000000100000000000000
   rotationSpeed: 0.3
+  gameMgr: {fileID: 0}

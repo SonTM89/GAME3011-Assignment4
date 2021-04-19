@@ -4,34 +4,48 @@ using UnityEngine;
 
 public class Pipe : MonoBehaviour
 {
-    public int[] value;
-
+    [Header("Pipe Attributes")]
+    public int[] connectorValues;
     public float rotationSpeed = 0;
+
+    [Header("References")]
+    public GameManager gameMgr;
 
     float realRotation;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        gameMgr = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
     }
+
 
     // Update is called once per frame
     void Update()
     {
-        if(transform.root.eulerAngles.z != realRotation)
+        if(transform.eulerAngles.z != realRotation)
         {
             transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, 0, realRotation), rotationSpeed);
         }
     }
 
 
+    // Rotating Pipe by Left Mouse clicking
     void OnMouseDown()
     {
+        // Calculate number of connectors after rotation to change value of total current connectors
+
+        int connectorCount = -gameMgr.CalculateConnectors((int)transform.position.x, (int)transform.position.y);
+
         RotatePipe();
+
+        connectorCount += gameMgr.CalculateConnectors((int)transform.position.x, (int)transform.position.y);
+
+        gameMgr.gameBoard.curConnectors += connectorCount;
     }
 
 
+    // Pipe Rotating
     public void RotatePipe()
     {
         realRotation += 90;
@@ -41,25 +55,24 @@ public class Pipe : MonoBehaviour
             realRotation = 0;
         }
 
-        
-
         RotateValue();
     }
 
 
+    // Change value of connectors to suit with rotating action
     public void RotateValue()
     {
-        int firstVal = value[0];
+        int upConnectorValue = connectorValues[(int)Position.UP];
 
-        for(int i = 0; i < value.Length; i++)
+        for(int i = 0; i < connectorValues.Length; i++)
         {
-            if (i + 1 < value.Length)
+            if (i + 1 < connectorValues.Length)
             {
-                value[i] = value[i + 1];
+                connectorValues[i] = connectorValues[i + 1];
             }
             else
             {
-                value[i] = firstVal;
+                connectorValues[i] = upConnectorValue;
             }
         }
     }
