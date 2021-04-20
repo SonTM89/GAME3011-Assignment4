@@ -1,52 +1,67 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    public Board gameBoard;
-
+    [Header("Pipe Elements")]
     public GameObject[] pipePrefabs;
 
     private const int DEFAULTWIDTH = 4;
     private const int DEFAULTHEIGHT = 4;
 
+    [Header("Game Attributes")]
+    public Board gameBoard;
+    public Difficulty gameDifficulty;
+    public PlayerSkill playerSkill;
+
+    [Header("Timer")]
+    public float timeRemaining;
+    public TextMeshProUGUI minuteText;
+    public TextMeshProUGUI secondText;
+
+    [Header("Text References")]
+    public TextMeshProUGUI curConnectorsText;
+    public TextMeshProUGUI winConnectorsText;
+    [SerializeField] private GameObject winText;
+    [SerializeField] private GameObject gameOverText;
+
+    private bool win;
+    private bool gameOver;
 
     // Start is called before the first frame update
     void Start()
     {
-        //// Set Fixed Board
-        //Vector2 dimension = CheckDimension();
+        // Set up Input Value and Generate Board Randomly
 
-        //gameBoard.width = (int)dimension.x;
-        //gameBoard.height = (int)dimension.y;
+        win = false;
+        gameOver = false;
 
-        //gameBoard.pipes = new Pipe[gameBoard.width, gameBoard.height];
+        gameDifficulty = InputValue.gameDifficulty;
 
-        //foreach(var item in GameObject.FindGameObjectsWithTag("Pipe"))
-        //{
-        //    gameBoard.pipes[(int)item.transform.position.x, (int)item.transform.position.y] = item.GetComponent<Pipe>();
-        //}
+        playerSkill = InputValue.playerSkill;
 
-        //foreach(var item in gameBoard.pipes)
-        //{
-        //    if(item != null)
-        //    {
-        //        Debug.Log(item.gameObject.name);
-        //    }   
-        //}
+        SettingDifficulty();
 
+        CheckingPlayerSkill();
 
-        // Ramdom Generation Board
-        if(gameBoard.width == 0 || gameBoard.height == 0)
+        if (gameBoard.width == 0 || gameBoard.height == 0)
         {
             gameBoard.width = DEFAULTWIDTH;
             gameBoard.height = DEFAULTHEIGHT;
+
+            timeRemaining = 30.0f;
         }
+
+        CameraAdjustment(gameBoard.width / 2, gameBoard.height / 2 - 1);
 
         GenerateBoard();
 
         gameBoard.winConnectors = WinConnectorsCount();
+
+        winConnectorsText.text = gameBoard.winConnectors.ToString();
 
         Shuffle();
 
@@ -56,7 +71,114 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (gameOver == false)
+        {
+            TimeCounter();
+
+            curConnectorsText.text = gameBoard.curConnectors.ToString();
+
+            if (gameBoard.curConnectors == gameBoard.winConnectors)
+            {
+                gameOver = true;
+                win = true;
+            }
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+
+            if (win)
+            {
+                winText.gameObject.SetActive(true);
+                StartCoroutine(ShowMessage(2.0f));
+            }
+            else
+            {
+                gameOverText.gameObject.SetActive(true);
+                StartCoroutine(ShowMessage(2.0f));
+            }
+        }
+    }
+
+
+    // Setting Difficulty up to Input value
+    private void SettingDifficulty()
+    {
+        if (gameDifficulty == Difficulty.EASY)
+        {
+            gameBoard.width = 4;
+            gameBoard.height = 4;
+
+            timeRemaining = 30.0f;
+        }
+        else if (gameDifficulty == Difficulty.MEDIUM)
+        {
+            gameBoard.width = 6;
+            gameBoard.height = 6;
+
+            timeRemaining = 90.0f;
+        }
+        else if (gameDifficulty == Difficulty.HARD)
+        {
+            gameBoard.width = 8;
+            gameBoard.height = 8;
+
+            timeRemaining = 180.0f;
+        }
+    }
+
+
+    // Checking Hacking Skill to add extra time
+    private void CheckingPlayerSkill()
+    {
+        if(playerSkill == PlayerSkill.LEVEL1)
+        {
+            timeRemaining += 5.0f;
+        }
+        else if (playerSkill == PlayerSkill.LEVEL2)
+        {
+            timeRemaining += 10.0f;
+        }
+        else if (playerSkill == PlayerSkill.LEVEL3)
+        {
+            timeRemaining += 20.0f;
+        }
+    }
+
+
+    // Changing Camera Position
+    private void CameraAdjustment(float x, float y)
+    {
+        Camera.main.transform.position = new Vector3(Camera.main.transform.position.x + x, Camera.main.transform.position.y + y, -10.0f);
+    }
+
+
+    // Show Message after finishing Game and change to Start scene
+    IEnumerator ShowMessage(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        Cursor.lockState = CursorLockMode.Confined;
+        SceneManager.LoadScene("StartScene");
+    }
+
+
+    // Count down the time to set the game over state
+    private void TimeCounter()
+    {
+        if (timeRemaining > 0)
+        {
+            timeRemaining -= Time.deltaTime;
+
+            int minute = (int)(timeRemaining) / 60;
+            int second = (int)timeRemaining - (60 * minute);
+
+            minuteText.text = (minute > 9) ? minute.ToString() : "0" + minute.ToString();
+            secondText.text = (second > 9) ? second.ToString() : "0" + second.ToString();
+        }
+        else
+        {
+            gameOver = true;
+        }
     }
 
 

@@ -33,15 +33,18 @@ public class Pipe : MonoBehaviour
     // Rotating Pipe by Left Mouse clicking
     void OnMouseDown()
     {
-        // Calculate number of connectors after rotation to change value of total current connectors
+        if(Cursor.lockState != CursorLockMode.Locked)
+        {
+            // Calculate number of connectors after rotation to change value of total current connectors
 
-        int connectorCount = -gameMgr.CalculateConnectors((int)transform.position.x, (int)transform.position.y);
+            int connectorCount = -gameMgr.CalculateConnectors((int)transform.position.x, (int)transform.position.y);
 
-        RotatePipe();
+            RotatePipe();
 
-        connectorCount += gameMgr.CalculateConnectors((int)transform.position.x, (int)transform.position.y);
+            connectorCount += gameMgr.CalculateConnectors((int)transform.position.x, (int)transform.position.y);
 
-        gameMgr.gameBoard.curConnectors += connectorCount;
+            gameMgr.gameBoard.curConnectors += connectorCount;
+        }  
     }
 
 
